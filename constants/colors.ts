@@ -1,0 +1,16 @@
+export default {
+  bgDeepBlue: '#0a1929',
+  bgDarker: '#051221',
+  cyan: '#00d4ff',
+  cyanDark: '#0099cc',
+  cyanLight: '#4de8ff',
+  amber: '#ffae00',
+  white: '#e0f7fa',
+  textMuted: '#8ba8c4',
+  gridLine: 'rgba(0, 212, 255, 0.15)',
+  cardBg: 'rgba(10, 25, 41, 0.9)',
+  cardBorder: 'rgba(0, 212, 255, 0.4)',
+  glowCyan: 'rgba(0, 212, 255, 0.4)',
+  inputBg: 'rgba(0, 212, 255, 0.05)',
+  inputBorder: 'rgba(0, 212, 255, 0.3)',
+};
