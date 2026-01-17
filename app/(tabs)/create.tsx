@@ -8,8 +8,8 @@ import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
 import CreateEntryModal from '@/components/CreateEntryModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { getEntriesByAuthor, createEntry, Entry } from '@/services/entries.service';
-import { getUniverseEntries, Universe } from '@/services/firestore/universes.service';
+import { getEntriesByAuthor, createEntry, Entry } from '@/services/firestore/entries.service';
+import { getUniverseEntries, Universe, getAllUniverses } from '@/services/firestore/universes.service';
 
 export default function NexusScreen() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function NexusScreen() {
 
   const fetchUniverses = async () => {
     try {
-      const universeData = await getUniverseEntries();
+      const universeData = await getAllUniverses();
       setUniverses(universeData);
     } catch (err: any) {
       console.error('Error fetching universes:', err);
@@ -74,8 +74,8 @@ export default function NexusScreen() {
 
   const filteredEntries = entries.filter(entry => {
     if (activeFilter === 'all') return true;
-    if (activeFilter === 'original') return entry.isOriginal;
-    if (activeFilter === 'inspired') return !entry.isOriginal;
+    if (activeFilter === 'original') return entry.type === 'original';
+    if (activeFilter === 'inspired') return entry.type === 'inspired';
     return true;
   });
 
@@ -89,17 +89,17 @@ export default function NexusScreen() {
       <View style={styles.entryContent}>
         <View style={[
           styles.universeBadge,
-          item.isOriginal ? styles.badgeOriginal : styles.badgeInspired
+          item.type === 'original' ? styles.badgeOriginal : styles.badgeInspired
         ]}>
           <Text style={styles.badgeText}>
-            {item.isOriginal ? 'ORIGINAL' : 'INSPIRED'}
+            {item.type === 'original' ? 'ORIGINAL' : 'INSPIRED'}
           </Text>
         </View>
         <Text style={styles.entryTitle}>{item.title}</Text>
         <Text style={styles.entryAuthor}>by {item.authorName}</Text>
-        <Text style={styles.entryUniverse}>{getUniverseName(item.universeId)}</Text>
+        <Text style={styles.entryUniverse}>{getUniverseName(item.universe)}</Text>
         <Text style={styles.entryCount}>
-          {new Date(item.createdAt).toLocaleDateString()}
+          {item.createdAt.toDate().toLocaleDateString()}
         </Text>
       </View>
     </TouchableOpacity>

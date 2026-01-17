@@ -7,12 +7,12 @@ import {
   Bell, Shield, HelpCircle, Info, FileText, Lock, Mail, User as UserIcon
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import GridBackground from '@/@/components/GridBackground';
-import Header from '@/@/components/Header';
+import GridBackground from '@/components/GridBackground';
+import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserById, updateUser, User as FirestoreUser } from '@/services/firestore/users.service';
 import { signOut } from '@/services/auth.service';
-import { getEntriesByAuthor } from '@/services/entries.service';
+import { getEntriesByAuthor } from '@/services/firestore/entries.service';
 
 type ModalType = 'editProfile' | 'settings' | 'achievements' | 'about' | 'privacy' | 'legal' | null;
 
@@ -48,15 +48,15 @@ export default function ProfileScreen() {
       // Fetch user data
       const userData = await getUserById(user.uid);
       setUserData(userData);
-      setUsername(userData.displayName || '');
-      setBio(userData.bio || '');
+      setUsername(userData?.username || '');
+      setBio(userData?.bio || '');
 
       // Fetch user's entries for stats
       const entries = await getEntriesByAuthor(user.uid);
       
       // Calculate stats
-      const totalViews = entries.reduce((sum, entry) => sum + (entry.viewsCount || 0), 0);
-      const totalLikes = entries.reduce((sum, entry) => sum + (entry.likesCount || 0), 0);
+      const totalViews = entries.reduce((sum: number, entry: any) => sum + (entry.viewsCount || 0), 0);
+      const totalLikes = entries.reduce((sum: number, entry: any) => sum + (entry.likesCount || 0), 0);
       
       setStats({
         entries: entries.length,
@@ -84,7 +84,7 @@ export default function ProfileScreen() {
             try {
               await signOut();
               Alert.alert('Signed Out', 'You have been successfully signed out.');
-              router.replace('/(tabs)/index');
+              router.replace('/');
             } catch (err: any) {
               Alert.alert('Error', err.message || 'Failed to sign out');
             }
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
     
     try {
       await updateUser(user.uid, {
-        displayName: username,
+        username: username,
         bio: bio,
       });
       Alert.alert('Profile Updated', 'Your profile has been successfully updated.');

@@ -9,7 +9,7 @@ import HeroPanel from '@/components/HeroPanel';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { FilterType } from '@/components/FilterBar';
 import FictionCard from '@/components/FictionCard';
-import { getEntries, Entry } from '@/services/entries.service';
+import { getEntries, Entry } from '@/services/firestore/entries.service';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function HomeScreen() {
     let filtered = entries;
     
     if (activeFilter !== 'all') {
-      filtered = filtered.filter(e => e.status === activeFilter);
+      filtered = filtered.filter(e => e.type === activeFilter);
     }
     
     if (searchQuery.trim()) {
@@ -109,16 +109,7 @@ export default function HomeScreen() {
           filteredEntries.map(entry => (
             <FictionCard
               key={entry.id}
-              entry={{
-                id: entry.id,
-                title: entry.title,
-                description: entry.description,
-                author: entry.authorName,
-                image: entry.coverImage || '',
-                status: entry.status || 'approved',
-                likes: entry.likesCount || 0,
-                views: entry.viewsCount || 0,
-              }}
+              entry={entry}
               onPress={() => handleCardPress(entry.id)}
             />
           ))

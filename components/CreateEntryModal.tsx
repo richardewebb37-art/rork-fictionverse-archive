@@ -6,8 +6,10 @@ import {
 import { X, ChevronDown, Upload, Check, AlertCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
-import { createEntry } from '@/services/entries.service';
-import { getUniverseEntries } from '@/services/firestore/universes.service';
+import { createEntry } from '@/services/firestore/entries.service';
+import { getAllUniverses } from '@/services/firestore/universes.service';
+import { collection, doc } from 'firebase/firestore';
+import { firestore } from '@/config/firebase';
 
 interface CreateEntryModalProps {
   visible: boolean;
@@ -121,15 +123,17 @@ export default function CreateEntryModal({ visible, onClose, onSuccess }: Create
         ? (selectedUniverse === 'new' ? originalUniverseName : selectedUniverse)
         : selectedUniverse;
 
-      await createEntry({
+      const entryId = doc(collection(firestore, 'entries')).id;
+      
+      await createEntry(entryId, {
         title,
         description: content.substring(0, 200),
         content,
-        universeId: universeName,
-        isOriginal: workType === 'original',
+        universe: universeName,
+        type: workType === 'original' ? 'original' : 'inspired',
+        universeType: workType === 'original' ? 'original' : 'inspired',
         source: workType === 'inspired' ? source : undefined,
-        visibility: 'private',
-        status: 'pending',
+        tags: [],
       });
 
       Alert.alert(
@@ -168,7 +172,7 @@ export default function CreateEntryModal({ visible, onClose, onSuccess }: Create
 
   React.useEffect(() => {
     if (workType === 'original' && visible) {
-      getUniverseEntries().then(setUniverses).catch(console.error);
+      getAllUniverses().then(setUniverses).catch(console.error);
     }
   }, [workType, visible]);
 

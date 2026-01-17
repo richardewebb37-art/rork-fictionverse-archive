@@ -32,14 +32,20 @@
       "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "RECORD_AUDIO",
-        "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED"
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
       ]
     },
     "web": {
@@ -96,15 +102,19 @@
     },
     "extra": {
       "eas": {
-        "projectId": "fictionverse-archive"
+        "projectId": "be49a9a0-ce36-4e04-901a-9cfabd7f76b9"
+      },
+      "router": {
+        "origin": "https://fictionverse.app/"
       }
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/fictionverse-archive"
+      "url": "https://u.expo.dev/be49a9a0-ce36-4e04-901a-9cfabd7f76b9"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
-    }
+    },
+    "owner": "ericwebb341"
   }
 }

@@ -43,3 +43,4 @@ yarn-error.*
 .env
 rork-eslint.config.jsfirebase-admin-sdk.json
 .env
+*.json\nfirebase-*.json

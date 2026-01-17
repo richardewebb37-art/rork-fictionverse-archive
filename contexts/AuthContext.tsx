@@ -14,25 +14,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-          emailVerified: firebaseUser.emailVerified,
-        });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            emailVerified: firebaseUser.emailVerified,
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
 
-    return unsubscribe;
+      return unsubscribe;
+    } catch (err) {
+      console.error('AuthContext error:', err);
+      setError(err as Error);
+      setLoading(false);
+    }
   }, []);
+
+  if (error) {
+    console.error('AuthContext Error:', error);
+    // Return children anyway to prevent app from crashing completely
+    return <>{children}</>;
+  }
 
   return (
     <AuthContext.Provider

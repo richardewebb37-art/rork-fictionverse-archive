@@ -58,7 +58,6 @@ export const signUp = async (
     await createFirestoreUser(firebaseUser.uid, {
       username,
       email,
-      displayName: username,
     });
 
     return {
@@ -117,7 +116,7 @@ export const signInWithGoogle = async (
       await createFirestoreUser(firebaseUser.uid, {
         username: firebaseUser.displayName || 'User',
         email: firebaseUser.email || '',
-        avatar: firebaseUser.photoURL,
+        avatar: firebaseUser.photoURL || undefined,
       });
     }
 
@@ -154,7 +153,7 @@ export const signInWithApple = async (
       await createFirestoreUser(firebaseUser.uid, {
         username: firebaseUser.displayName || 'User',
         email: firebaseUser.email || '',
-        avatar: firebaseUser.photoURL,
+        avatar: firebaseUser.photoURL || undefined,
       });
     }
 

@@ -16,9 +16,12 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
+import { Entry } from './entries.service';
 
 // Types
 export type UniverseType = 'original' | 'inspired';
+import { getTrendingEntries } from './entries.service';
+export { getTrendingEntries } from './entries.service';
 
 export interface Universe {
   id: string;
@@ -285,6 +288,32 @@ export const PREDEFINED_INSPIRED_UNIVERSES = [
   'Back to the Future Universe',
   'Ghostbusters Universe',
 ];
+
+// Get entries by universe
+export const getUniverseEntries = async (
+  universeId: string,
+  limitCount: number = 20
+): Promise<Entry[]> => {
+  try {
+    const entriesRef = collection(firestore, 'entries');
+    const q = query(
+      entriesRef,
+      where('universeId', '==', universeId),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Entry));
+  } catch (error) {
+    console.error('Error getting universe entries:', error);
+    return [];
+  }
+};
 
 // Initialize predefined universes (run once during app setup)
 export const initializePredefinedUniverses = async (): Promise<void> => {

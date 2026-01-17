@@ -7,8 +7,8 @@ import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { getSavedEntries, deleteSave } from '@/services/firestore/interactions.service';
-import { Entry } from '@/services/entries.service';
+import { getUserSavedEntries, unsaveEntry, getUserSavedEntriesWithDetails } from '@/services/firestore/interactions.service';
+import { Entry } from '@/services/firestore/entries.service';
 
 type LibraryTab = 'saved' | 'history' | 'favorites';
 
@@ -39,7 +39,7 @@ export default function LibraryScreen() {
     try {
       setLoading(true);
       setError(null);
-      const entries = await getSavedEntries(user.uid);
+      const entries = await getUserSavedEntriesWithDetails(user.uid);
       setSavedEntries(entries);
     } catch (err: any) {
       setError(err.message || 'Failed to load saved entries');
@@ -69,7 +69,7 @@ export default function LibraryScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteSave(entryId, user.uid);
+              await unsaveEntry(entryId, user.uid);
               // Refresh the list
               setSavedEntries(prev => prev.filter(e => e.id !== entryId));
             } catch (err: any) {
@@ -170,7 +170,7 @@ export default function LibraryScreen() {
                     <Text style={styles.itemTitle}>{entry.title}</Text>
                     <Text style={styles.itemAuthor}>by {entry.authorName}</Text>
                     <Text style={styles.itemMeta}>
-                      {new Date(entry.createdAt).toLocaleDateString()}
+                      {entry.createdAt.toDate().toLocaleDateString()}
                     </Text>
                   </View>
                   <TouchableOpacity 

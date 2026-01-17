@@ -5,9 +5,11 @@ import {
   getDocs,
   setDoc,
   deleteDoc,
+  updateDoc,
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   onSnapshot,
   Timestamp,
@@ -173,6 +175,24 @@ export const getUserSavedEntries = async (
   const querySnapshot = await getDocs(q);
   
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Save));
+};
+
+// Get user's saved entries with full entry data
+export const getUserSavedEntriesWithDetails = async (
+  userId: string,
+  limitCount: number = 50
+): Promise<any[]> => {
+  const saves = await getUserSavedEntries(userId, limitCount);
+  const entries: any[] = [];
+  
+  for (const save of saves) {
+    const entry = await getDoc(doc(firestore, 'entries', save.entryId));
+    if (entry.exists()) {
+      entries.push({ id: entry.id, ...entry.data() });
+    }
+  }
+  
+  return entries;
 };
 
 // Real-time save listener

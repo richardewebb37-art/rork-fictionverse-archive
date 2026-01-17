@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
 import { Heart } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { FictionEntry } from '@/mocks/fictionEntries';
+import { Entry } from '@/services/firestore/entries.service';
 
 interface FictionCardProps {
-  entry: FictionEntry;
+  entry: Entry;
   onPress: () => void;
 }
 
@@ -43,10 +43,10 @@ export default function FictionCard({ entry, onPress }: FictionCardProps) {
         <View style={styles.content}>
           <View style={[
             styles.statusBadge,
-            entry.status === 'original' ? styles.statusOriginal : styles.statusInspired
+            entry.type === 'original' ? styles.statusOriginal : styles.statusInspired
           ]}>
             <Text style={styles.statusText}>
-              {entry.status === 'original' ? 'ORIGINAL WORK' : `INSPIRED BY [${entry.inspiredBy}]`}
+              {entry.type === 'original' ? 'ORIGINAL WORK' : `INSPIRED BY [${entry.inspiredBy}]`}
             </Text>
           </View>
           
@@ -54,10 +54,10 @@ export default function FictionCard({ entry, onPress }: FictionCardProps) {
           <Text style={styles.description} numberOfLines={2}>{entry.description}</Text>
           
           <View style={styles.meta}>
-            <Text style={styles.author}>{entry.author}</Text>
+            <Text style={styles.author}>{entry.authorName}</Text>
             <View style={styles.stats}>
               <Heart size={14} color={Colors.cyan} fill={Colors.cyan} />
-              <Text style={styles.likes}>{entry.likes.toLocaleString()}</Text>
+              <Text style={styles.likes}>{entry.stats?.likes.toLocaleString()}</Text>
             </View>
           </View>
           

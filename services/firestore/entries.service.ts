@@ -296,6 +296,38 @@ export const getUserDrafts = async (userId: string): Promise<Entry[]> => {
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Entry));
 };
 
+// Get all entries with filters
+export const getEntries = async (options: {
+  limit?: number;
+  type?: EntryType;
+  universeId?: string;
+  status?: EntryStatus;
+} = {}): Promise<Entry[]> => {
+  const { limit: limitCount = 50, type, universeId, status = 'approved' } = options;
+  
+  const constraints: any[] = [];
+  
+  if (type) {
+    constraints.push(where('type', '==', type));
+  }
+  
+  if (universeId) {
+    constraints.push(where('universe', '==', universeId));
+  }
+  
+  constraints.push(where('status', '==', status));
+  constraints.push(orderBy('createdAt', 'desc'));
+  
+  if (limitCount) {
+    constraints.push(limit(limitCount));
+  }
+  
+  const q = query(collection(firestore, COLLECTION_NAME), ...constraints);
+  const querySnapshot = await getDocs(q);
+  
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Entry));
+};
+
 // Get pending entries (for moderation)
 export const getPendingEntries = async (): Promise<Entry[]> => {
   const q = query(

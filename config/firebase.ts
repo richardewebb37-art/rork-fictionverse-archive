@@ -1,9 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { 
-  getAuth, 
-  initializeAuth, 
-  getReactNativePersistence, 
-  Auth 
+import {
+  getAuth,
+  Auth
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -21,20 +19,20 @@ import {
   Messaging,
   isSupported as isMessagingSupported 
 } from 'firebase/messaging';
-import { 
-  getAnalytics, 
+import {
+  getAnalytics,
   Analytics,
-  isSupported as isAnalyticsSupported 
+  isSupported as isAnalyticsSupported
 } from 'firebase/analytics';
-import { 
-  getCrashlytics, 
-  Crashlytics 
-} from 'firebase/crashlytics';
+// Crashlytics not available in web
+// import {
+//   getCrashlytics,
+//   Crashlytics
+// } from 'firebase/crashlytics';
 import { 
   getRemoteConfig, 
   RemoteConfig 
 } from 'firebase/remote-config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // Firebase configuration for fictionverse-dba28
@@ -56,26 +54,23 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 
-// Initialize Auth with AsyncStorage persistence
-let auth: Auth;
-if (Platform.OS !== 'web') {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} else {
-  auth = getAuth(app);
-}
+// Initialize Auth
+const auth: Auth = getAuth(app);
 
-// Initialize Firestore with persistent caching
+// Initialize Firestore with persistent caching (only on React Native)
 let firestore: Firestore;
-try {
-  firestore = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
-  });
-} catch (error) {
-  console.warn('Firestore already initialized:', error);
+if (Platform.OS !== 'web') {
+  try {
+    firestore = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch (error) {
+    console.warn('Firestore initialization error:', error);
+    firestore = getFirestore(app);
+  }
+} else {
   firestore = getFirestore(app);
 }
 
@@ -102,8 +97,9 @@ if (Platform.OS === 'web') {
   });
 }
 
-// Initialize Crashlytics
-const crashlytics: Crashlytics = getCrashlytics(app);
+// Initialize Crashlytics (not available on web)
+// const crashlytics: Crashlytics = getCrashlytics(app);
+const crashlytics: any = null;
 
 // Initialize Remote Config
 let remoteConfig: RemoteConfig;

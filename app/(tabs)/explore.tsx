@@ -6,8 +6,8 @@ import { TrendingUp, Clock, Star, Zap } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
-import { getTrendingEntries, getUniverseEntries, Universe } from '@/services/firestore/universes.service';
-import { Entry } from '@/services/entries.service';
+import { getTrendingEntries, getUniverseEntries, Universe, getAllUniverses } from '@/services/firestore/universes.service';
+import { Entry } from '@/services/firestore/entries.service';
 
 interface Category {
   id: string;
@@ -34,12 +34,12 @@ export default function ExploreScreen() {
       setError(null);
       
       // Fetch trending entries
-      const trendingEntries = await getTrendingEntries({ limit: 10 });
+      const trendingEntries = await getTrendingEntries(10);
       setTrending(trendingEntries);
 
       // Fetch universes for categories
-      const universes = await getUniverseEntries();
-      const categoryData: Category[] = universes.map((universe: Universe, index) => ({
+      const universes = await getAllUniverses();
+      const categoryData: Category[] = universes.map((universe: Universe, index: number) => ({
         id: universe.id,
         name: universe.name.toUpperCase(),
         icon: [Zap, Star, TrendingUp, Clock][index % 4],
@@ -57,7 +57,7 @@ export default function ExploreScreen() {
 
   const handleCategoryPress = (categoryName: string) => {
     router.push({
-      pathname: '/(tabs)/index',
+      pathname: '/',
       params: { category: categoryName }
     });
   };
@@ -71,7 +71,7 @@ export default function ExploreScreen() {
 
   const handleCollectionPress = () => {
     router.push({
-      pathname: '/(tabs)/index',
+      pathname: '/',
       params: { collection: 'best-of-2025' }
     });
   };
@@ -149,7 +149,7 @@ export default function ExploreScreen() {
               <View style={styles.trendingContent}>
                 <Text style={styles.trendingTitle}>{item.title}</Text>
                 <Text style={styles.trendingAuthor}>by {item.authorName}</Text>
-                <Text style={styles.trendingViews}>{(item.viewsCount || 0).toLocaleString()} views</Text>
+                <Text style={styles.trendingViews}>{(item.stats?.views || 0).toLocaleString()} views</Text>
               </View>
             </TouchableOpacity>
           ))}
