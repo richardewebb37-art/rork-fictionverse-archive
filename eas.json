@@ -10,10 +10,7 @@
       "channel": "development",
       "android": {
         "buildType": "apk",
-        "withoutCredentials": true,
-        "config": {
-          "bundleInDebug": false
-        }
+        "withoutCredentials": true
       }
     },
     "preview": {
