@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 
-const LOGO_URL = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/duk3nl9qw6latneasuu6r';
+const LOGO = require('@/assets/images/bottom-logo.png');
 
 interface HeroPanelProps {
   title?: string;
@@ -14,7 +14,7 @@ interface HeroPanelProps {
 export default function HeroPanel({ 
   title = 'Welcome to the Archive', 
   subtitle = 'The central hub for original and inspired constructivist fiction',
-  showLogo = true 
+  showLogo = false 
 }: HeroPanelProps) {
   return (
     <View style={styles.container}>
@@ -26,7 +26,7 @@ export default function HeroPanel({
       {showLogo && (
         <View style={styles.logoContainer}>
           <Image 
-            source={{ uri: LOGO_URL }} 
+            source={LOGO} 
             style={styles.logo}
             resizeMode="contain"
           />

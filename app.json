@@ -5,40 +5,106 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rork-app",
-    "userInterfaceStyle": "automatic",
+    "scheme": "fictionverse",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0a1929"
     },
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "app.rork.fictionverse-archive"
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fictionverse.archive",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to capture images for your entries.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to upload images for your entries.",
+        "NSMicrophoneUsageDescription": "This app uses the microphone for audio recordings in your entries.",
+        "NSPhotoLibraryAddUsageDescription": "This app saves images to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0a1929"
       },
-      "package": "app.rork.fictionverse_archive"
+      "package": "com.fictionverse.archive",
+      "versionCode": 1,
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       [
         "expo-router",
         {
-          "origin": "https://rork.com/"
+          "origin": "https://fictionverse.app/"
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for audio recordings."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to upload images for your entries.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to capture images for your entries."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#00d4ff"
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fictionverse-archive"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/fictionverse-archive"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Text } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Text, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
@@ -8,40 +9,70 @@ import HeroPanel from '@/components/HeroPanel';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { FilterType } from '@/components/FilterBar';
 import FictionCard from '@/components/FictionCard';
-import { fictionEntries } from '@/mocks/fictionEntries';
+import { getEntries, Entry } from '@/services/entries.service';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch entries from Firestore
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const fetchEntries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedEntries = await getEntries({ limit: 50 });
+      setEntries(fetchedEntries);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load entries');
+      console.error('Error fetching entries:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredEntries = useMemo(() => {
-    let entries = fictionEntries;
+    let filtered = entries;
     
     if (activeFilter !== 'all') {
-      entries = entries.filter(e => e.status === activeFilter);
+      filtered = filtered.filter(e => e.status === activeFilter);
     }
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      entries = entries.filter(e => 
+      filtered = filtered.filter(e => 
         e.title.toLowerCase().includes(query) ||
         e.description.toLowerCase().includes(query) ||
-        e.author.toLowerCase().includes(query)
+        e.authorName.toLowerCase().includes(query)
       );
     }
     
-    return entries;
-  }, [searchQuery, activeFilter]);
+    return filtered;
+  }, [searchQuery, activeFilter, entries]);
 
   const handleCardPress = (id: string) => {
-    console.log('Card pressed:', id);
+    router.push({
+      pathname: '/modal',
+      params: { id }
+    });
+  };
+
+  const handleProfilePress = () => {
+    router.push('/(tabs)/profile');
   };
 
   return (
     <View style={styles.container}>
       <GridBackground />
-      <Header />
+      <Header onProfilePress={handleProfilePress} />
       
       <ScrollView 
         style={styles.scrollView}
@@ -59,8 +90,17 @@ export default function HomeScreen() {
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
         />
-        
-        {filteredEntries.length === 0 ? (
+
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={Colors.cyan} />
+            <Text style={styles.loadingText}>Loading entries...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : filteredEntries.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>NO ENTRIES FOUND</Text>
             <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
@@ -69,7 +109,16 @@ export default function HomeScreen() {
           filteredEntries.map(entry => (
             <FictionCard
               key={entry.id}
-              entry={entry}
+              entry={{
+                id: entry.id,
+                title: entry.title,
+                description: entry.description,
+                author: entry.authorName,
+                image: entry.coverImage || '',
+                status: entry.status || 'approved',
+                likes: entry.likesCount || 0,
+                views: entry.viewsCount || 0,
+              }}
               onPress={() => handleCardPress(entry.id)}
             />
           ))
@@ -89,6 +138,21 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff6b6b',
+    textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',

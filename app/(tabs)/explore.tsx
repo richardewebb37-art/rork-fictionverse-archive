@@ -1,66 +1,129 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TrendingUp, Clock, Star, Zap } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
+import { getTrendingEntries, getUniverseEntries, Universe } from '@/services/firestore/universes.service';
+import { Entry } from '@/services/entries.service';
 
-const categories = [
-  { id: '1', name: 'CYBERPUNK', icon: Zap, count: 234 },
-  { id: '2', name: 'SPACE OPERA', icon: Star, count: 189 },
-  { id: '3', name: 'POST-APOCALYPTIC', icon: TrendingUp, count: 156 },
-  { id: '4', name: 'TIME TRAVEL', icon: Clock, count: 98 },
-];
-
-const trending = [
-  {
-    id: '1',
-    title: 'NEURAL DECAY',
-    author: 'GHOST_WIRE',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop',
-    views: '12.4K',
-  },
-  {
-    id: '2',
-    title: 'STEEL HORIZON',
-    author: 'MECH_PILOT',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=200&h=200&fit=crop',
-    views: '8.9K',
-  },
-  {
-    id: '3',
-    title: 'DATA STORM',
-    author: 'CYBER_SAGE',
-    image: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=200&h=200&fit=crop',
-    views: '7.2K',
-  },
-];
+interface Category {
+  id: string;
+  name: string;
+  icon: any;
+  count: number;
+}
 
 export default function ExploreScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [trending, setTrending] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchExploreData();
+  }, []);
+
+  const fetchExploreData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch trending entries
+      const trendingEntries = await getTrendingEntries({ limit: 10 });
+      setTrending(trendingEntries);
+
+      // Fetch universes for categories
+      const universes = await getUniverseEntries();
+      const categoryData: Category[] = universes.map((universe: Universe, index) => ({
+        id: universe.id,
+        name: universe.name.toUpperCase(),
+        icon: [Zap, Star, TrendingUp, Clock][index % 4],
+        count: universe.entryCount || 0,
+      }));
+      
+      setCategories(categoryData);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load explore data');
+      console.error('Error fetching explore data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryPress = (categoryName: string) => {
+    router.push({
+      pathname: '/(tabs)/index',
+      params: { category: categoryName }
+    });
+  };
+
+  const handleTrendingPress = (id: string, title: string) => {
+    router.push({
+      pathname: '/modal',
+      params: { id, title }
+    });
+  };
+
+  const handleCollectionPress = () => {
+    router.push({
+      pathname: '/(tabs)/index',
+      params: { collection: 'best-of-2025' }
+    });
+  };
+
+  const handleProfilePress = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <GridBackground variant="ui" />
+        <Header onProfilePress={handleProfilePress} />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.cyan} />
+          <Text style={styles.loadingText}>Loading explore data...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <GridBackground variant="ui" />
-      <Header />
+      <Header onProfilePress={handleProfilePress} />
       
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>EXPLORE UNIVERSES</Text>
           <View style={styles.titleUnderline} />
         </View>
 
-        <Text style={styles.subtitle}>CATEGORIES</Text>
+        <Text style={styles.subtitle}>UNIVERSES</Text>
         <View style={styles.categoriesGrid}>
           {categories.map((cat) => {
             const IconComponent = cat.icon;
             return (
-              <TouchableOpacity key={cat.id} style={styles.categoryCard}>
+              <TouchableOpacity 
+                key={cat.id} 
+                style={styles.categoryCard}
+                onPress={() => handleCategoryPress(cat.name)}
+              >
                 <IconComponent size={28} color={Colors.cyan} />
                 <Text style={styles.categoryName}>{cat.name}</Text>
                 <Text style={styles.categoryCount}>{cat.count} ENTRIES</Text>
@@ -76,23 +139,30 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.trendingScroll}
         >
           {trending.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.trendingCard}>
-              <Image source={{ uri: item.image }} style={styles.trendingImage} />
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.trendingCard}
+              onPress={() => handleTrendingPress(item.id, item.title)}
+            >
+              <Image source={{ uri: item.coverImage || '' }} style={styles.trendingImage} />
               <View style={styles.trendingOverlay} />
               <View style={styles.trendingContent}>
                 <Text style={styles.trendingTitle}>{item.title}</Text>
-                <Text style={styles.trendingAuthor}>{item.author}</Text>
-                <Text style={styles.trendingViews}>{item.views} views</Text>
+                <Text style={styles.trendingAuthor}>by {item.authorName}</Text>
+                <Text style={styles.trendingViews}>{(item.viewsCount || 0).toLocaleString()} views</Text>
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         <Text style={styles.subtitle}>FEATURED COLLECTIONS</Text>
-        <TouchableOpacity style={styles.collectionBanner}>
+        <TouchableOpacity 
+          style={styles.collectionBanner}
+          onPress={handleCollectionPress}
+        >
           <View style={styles.collectionGradient}>
             <Text style={styles.collectionLabel}>CURATED</Text>
-            <Text style={styles.collectionTitle}>BEST OF 2025</Text>
+            <Text style={styles.collectionTitle}>BEST OF 2026</Text>
             <Text style={styles.collectionDesc}>Top rated fiction from the community</Text>
           </View>
         </TouchableOpacity>
@@ -111,6 +181,29 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 100,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    marginTop: 16,
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderWidth: 1,
+    borderColor: '#ff6b6b',
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff6b6b',
+    textAlign: 'center',
   },
   sectionHeader: {
     alignItems: 'center',

@@ -1,52 +1,25 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BookMarked, Clock, Heart, Trash2 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import { getSavedEntries, deleteSave } from '@/services/firestore/interactions.service';
+import { Entry } from '@/services/entries.service';
 
 type LibraryTab = 'saved' | 'history' | 'favorites';
 
-const savedItems = [
-  {
-    id: '1',
-    title: 'THE GEARWORK PROTOCOL',
-    author: 'NEXUS_7',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop',
-    savedDate: '2 days ago',
-  },
-  {
-    id: '2',
-    title: 'QUANTUM ECHOES',
-    author: 'VOID_WALKER',
-    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=100&h=100&fit=crop',
-    savedDate: '1 week ago',
-  },
-];
-
-const historyItems = [
-  {
-    id: '1',
-    title: 'NEON RAIN',
-    author: 'CIPHER_X',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=100&h=100&fit=crop',
-    readDate: 'Today',
-    progress: 75,
-  },
-  {
-    id: '2',
-    title: 'CHROME DYNASTY',
-    author: 'SYNTH_MIND',
-    image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=100&h=100&fit=crop',
-    readDate: 'Yesterday',
-    progress: 100,
-  },
-];
-
 export default function LibraryScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<LibraryTab>('saved');
+  const [savedEntries, setSavedEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const tabs: { key: LibraryTab; label: string; icon: typeof BookMarked }[] = [
     { key: 'saved', label: 'SAVED', icon: BookMarked },
@@ -54,10 +27,88 @@ export default function LibraryScreen() {
     { key: 'favorites', label: 'FAVORITES', icon: Heart },
   ];
 
+  useEffect(() => {
+    if (isAuthenticated && user && activeTab === 'saved') {
+      fetchSavedEntries();
+    }
+  }, [isAuthenticated, user, activeTab]);
+
+  const fetchSavedEntries = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const entries = await getSavedEntries(user.uid);
+      setSavedEntries(entries);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load saved entries');
+      console.error('Error fetching saved entries:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleItemPress = (id: string, title: string) => {
+    router.push({
+      pathname: '/modal',
+      params: { id, title }
+    });
+  };
+
+  const handleDeleteItem = async (entryId: string, title: string) => {
+    if (!user) return;
+    
+    Alert.alert(
+      'Remove Entry',
+      `Are you sure you want to remove "${title}" from your saved items?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Remove', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteSave(entryId, user.uid);
+              // Refresh the list
+              setSavedEntries(prev => prev.filter(e => e.id !== entryId));
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to remove entry');
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleProfilePress = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <GridBackground variant="archive" />
+        <Header onProfilePress={handleProfilePress} />
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.emptyState}>
+            <BookMarked size={48} color={Colors.textMuted} />
+            <Text style={styles.emptyText}>SIGN IN REQUIRED</Text>
+            <Text style={styles.emptySubtext}>Sign in to access your library</Text>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <GridBackground variant="archive" />
-      <Header />
+      <Header onProfilePress={handleProfilePress} />
       
       <ScrollView 
         style={styles.scrollView}
@@ -92,39 +143,53 @@ export default function LibraryScreen() {
 
         {activeTab === 'saved' && (
           <View style={styles.listContainer}>
-            {savedItems.map((item) => (
-              <View key={item.id} style={styles.listItem}>
-                <Image source={{ uri: item.image }} style={styles.itemImage} />
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemAuthor}>{item.author}</Text>
-                  <Text style={styles.itemMeta}>Saved {item.savedDate}</Text>
-                </View>
-                <TouchableOpacity style={styles.deleteButton}>
-                  <Trash2 size={18} color={Colors.textMuted} />
-                </TouchableOpacity>
+            {loading ? (
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color={Colors.cyan} />
+                <Text style={styles.loadingText}>Loading saved entries...</Text>
               </View>
-            ))}
+            ) : error ? (
+              <View style={styles.centerContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : savedEntries.length === 0 ? (
+              <View style={styles.emptyState}>
+                <BookMarked size={48} color={Colors.textMuted} />
+                <Text style={styles.emptyText}>NO SAVED ENTRIES</Text>
+                <Text style={styles.emptySubtext}>Save entries to read later</Text>
+              </View>
+            ) : (
+              savedEntries.map((entry) => (
+                <TouchableOpacity 
+                  key={entry.id} 
+                  style={styles.listItem}
+                  onPress={() => handleItemPress(entry.id, entry.title)}
+                >
+                  <Image source={{ uri: entry.coverImage || '' }} style={styles.itemImage} />
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemTitle}>{entry.title}</Text>
+                    <Text style={styles.itemAuthor}>by {entry.authorName}</Text>
+                    <Text style={styles.itemMeta}>
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteItem(entry.id, entry.title)}
+                  >
+                    <Trash2 size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         )}
 
         {activeTab === 'history' && (
-          <View style={styles.listContainer}>
-            {historyItems.map((item) => (
-              <View key={item.id} style={styles.listItem}>
-                <Image source={{ uri: item.image }} style={styles.itemImage} />
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemAuthor}>{item.author}</Text>
-                  <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, { width: `${item.progress}%` }]} />
-                  </View>
-                  <Text style={styles.itemMeta}>
-                    {item.progress === 100 ? 'Completed' : `${item.progress}% read`} • {item.readDate}
-                  </Text>
-                </View>
-              </View>
-            ))}
+          <View style={styles.emptyState}>
+            <Clock size={48} color={Colors.textMuted} />
+            <Text style={styles.emptyText}>READING HISTORY</Text>
+            <Text style={styles.emptySubtext}>Coming soon</Text>
           </View>
         )}
 
@@ -235,16 +300,20 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
   },
-  progressContainer: {
-    height: 3,
-    backgroundColor: Colors.inputBg,
-    marginTop: 6,
-    borderRadius: 2,
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
   },
-  progressBar: {
-    height: '100%',
-    backgroundColor: Colors.cyan,
-    borderRadius: 2,
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff6b6b',
+    textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',
