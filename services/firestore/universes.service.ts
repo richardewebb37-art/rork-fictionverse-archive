@@ -20,8 +20,7 @@ import { Entry } from './entries.service';
 
 // Types
 export type UniverseType = 'original' | 'inspired';
-import { getTrendingEntries } from './entries.service';
-export { getTrendingEntries } from './entries.service';
+
 
 export interface Universe {
   id: string;

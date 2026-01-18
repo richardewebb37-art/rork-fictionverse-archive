@@ -6,8 +6,8 @@ import { TrendingUp, Clock, Star, Zap } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
-import { getTrendingEntries, getUniverseEntries, Universe, getAllUniverses } from '@/services/firestore/universes.service';
-import { Entry } from '@/services/firestore/entries.service';
+import { Universe, getAllUniverses } from '@/services/firestore/universes.service';
+import { getTrendingEntries, Entry } from '@/services/firestore/entries.service';
 
 interface Category {
   id: string;
@@ -77,7 +77,7 @@ export default function ExploreScreen() {
   };
 
   const handleProfilePress = () => {
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   };
 
   if (loading) {

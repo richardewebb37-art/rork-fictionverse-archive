@@ -3,7 +3,7 @@ import {
   View, StyleSheet, Modal, Text, TouchableOpacity, TextInput, 
   ScrollView, Alert, Platform, ActivityIndicator
 } from 'react-native';
-import { X, ChevronDown, Upload, Check, AlertCircle } from 'lucide-react-native';
+import { X, ChevronDown, Check, AlertCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { createEntry } from '@/services/firestore/entries.service';
@@ -359,7 +359,7 @@ export default function CreateEntryModal({ visible, onClose, onSuccess }: Create
               <Text style={styles.disclaimerWarning}>
                 WARNING: If your work is reviewed by our team and found to contain more than 5% content 
                 related to existing works, your submission will be rejected and you will need to resubmit 
-                it under "Inspired By" instead.
+                it under Inspired By instead.
               </Text>
             </Text>
           </>
@@ -382,7 +382,7 @@ export default function CreateEntryModal({ visible, onClose, onSuccess }: Create
               
               <Text style={styles.disclaimerWarning}>
                 NOTE: This is fan fiction and derivative work. You do not own the rights to the original 
-                universe. Your work will be clearly labeled as "Inspired By" content.
+                universe. Your work will be clearly labeled as Inspired By content.
               </Text>
             </Text>
           </>

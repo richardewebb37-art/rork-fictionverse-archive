@@ -147,7 +147,7 @@ export default function ModalScreen() {
           Navigate through the digital corridors of imagination, where every story 
           is a portal to another dimension of creative expression. The neon lights 
           flicker overhead as you descend deeper into the archive, each entry a 
-          fragment of someone's vision made manifest in the digital ether.
+          fragment of someone&apos;s vision made manifest in the digital ether.
         </Text>
 
         <Text style={styles.bodyText}>

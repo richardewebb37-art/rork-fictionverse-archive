@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import Colors from '@/constants/colors';
 import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserSavedEntries, unsaveEntry, getUserSavedEntriesWithDetails } from '@/services/firestore/interactions.service';
+import { unsaveEntry, getUserSavedEntriesWithDetails } from '@/services/firestore/interactions.service';
 import { Entry } from '@/services/firestore/entries.service';
 
 type LibraryTab = 'saved' | 'history' | 'favorites';
@@ -27,13 +27,7 @@ export default function LibraryScreen() {
     { key: 'favorites', label: 'FAVORITES', icon: Heart },
   ];
 
-  useEffect(() => {
-    if (isAuthenticated && user && activeTab === 'saved') {
-      fetchSavedEntries();
-    }
-  }, [isAuthenticated, user, activeTab]);
-
-  const fetchSavedEntries = async () => {
+  const fetchSavedEntries = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -47,7 +41,13 @@ export default function LibraryScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user && activeTab === 'saved') {
+      fetchSavedEntries();
+    }
+  }, [isAuthenticated, user, activeTab, fetchSavedEntries]);
 
   const handleItemPress = (id: string, title: string) => {
     router.push({
@@ -82,7 +82,7 @@ export default function LibraryScreen() {
   };
 
   const handleProfilePress = () => {
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   };
 
   if (!isAuthenticated) {

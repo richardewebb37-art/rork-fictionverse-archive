@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image, FlatList, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Image, FlatList, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, BookOpen, TrendingUp } from 'lucide-react-native';
@@ -8,8 +8,8 @@ import GridBackground from '@/components/GridBackground';
 import Header from '@/components/Header';
 import CreateEntryModal from '@/components/CreateEntryModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { getEntriesByAuthor, createEntry, Entry } from '@/services/firestore/entries.service';
-import { getUniverseEntries, Universe, getAllUniverses } from '@/services/firestore/universes.service';
+import { getEntriesByAuthor, Entry } from '@/services/firestore/entries.service';
+import { Universe, getAllUniverses } from '@/services/firestore/universes.service';
 
 export default function NexusScreen() {
   const router = useRouter();
@@ -22,14 +22,7 @@ export default function NexusScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchUserEntries();
-      fetchUniverses();
-    }
-  }, [isAuthenticated, user]);
-
-  const fetchUserEntries = async () => {
+  const fetchUserEntries = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -43,16 +36,23 @@ export default function NexusScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchUniverses = async () => {
+  const fetchUniverses = useCallback(async () => {
     try {
       const universeData = await getAllUniverses();
       setUniverses(universeData);
     } catch (err: any) {
       console.error('Error fetching universes:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchUserEntries();
+      fetchUniverses();
+    }
+  }, [isAuthenticated, user, fetchUserEntries, fetchUniverses]);
 
   const getUniverseName = (universeId: string) => {
     const universe = universes.find(u => u.id === universeId);
